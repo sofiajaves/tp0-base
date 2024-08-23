@@ -1,11 +1,5 @@
 #!/bin/bash
 
-#Generar un docker compose con una cantidad de clientes por coomando:
-
-# como se corre con ./generar-compose.sh docker-compose-dev.yaml 5
-# significa que corro el script de bash, luego el compose (nombre del archivo) y la cantidad de clientes que quiero
-
-# VERIFICO QUE SE HAYAN PASADO 2 ARGUMENTOS
 if [ "$#" -ne 2 ]; then
     echo "Error: Must enter 2 arguments"
     exit 1
