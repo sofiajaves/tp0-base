@@ -14,15 +14,19 @@ def create_clients(file, clients):
                 'image': 'client:latest',
                 'entrypoint': '/client',
                 'environment': [
-                    f'- CLI_ID={i}',
-                    '- CLI_LOG_LEVEL=DEBUG'
+                    f'CLI_ID={i}',
+                    'CLI_LOG_LEVEL=DEBUG'
                 ],
                 'networks': [
                     'testing_net'
                 ],
                 'depends_on': [
                     'server'
+                ],
+                'volumes': [
+                    './client/config.ini:/app/config.ini'
                 ]
+
             }
         }
         data['services'].update(client)
