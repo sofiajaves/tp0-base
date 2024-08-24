@@ -1,5 +1,6 @@
 import socket
 import logging
+import signal
 
 
 class Server:
@@ -8,6 +9,8 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+        # Para saber el estado del servidor
+        self._is_running = True
 
     def run(self):
         """
@@ -18,11 +21,12 @@ class Server:
         finishes, servers starts to accept new connections again
         """
 
-        # TODO: Modify this program to handle signal to graceful shutdown
-        # the server
-        while True:
+        signal.signal(signal.SIGTERM, self.__signal_handler)
+
+        while self._is_running:
             client_sock = self.__accept_new_connection()
             self.__handle_client_connection(client_sock)
+
 
     def __handle_client_connection(self, client_sock):
         """
@@ -53,6 +57,22 @@ class Server:
 
         # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
-        c, addr = self._server_socket.accept()
-        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
-        return c
+        try:
+            c, addr = self._server_socket.accept()
+            logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
+            return c
+        except OSError as e:
+            logging.info('action: accept_connections | result: fail | error: {e}')
+            return None
+    
+    def __signal_handler(self, signal, frame):
+        """
+        Signal handler for SIGTERM signal
+
+        When SIGTERM signal is received, the server stops accepting new
+        connections and finishes the current ones
+        """
+        logging.info("action: signal_handler SIGTERM| result: in_progress")
+        self._is_running = False
+        self._server_socket.close()
+        logging.info("action: signal_handler SIGTERM | result: success")
