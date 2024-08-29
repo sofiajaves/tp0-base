@@ -24,7 +24,7 @@ def create_clients(file, clients):
                     'server'
                 ],
                 'volumes': [
-                    './client/config.ini:/app/config.ini'
+                    './client/config.yaml:/config.yaml'
                 ]
 
             }
