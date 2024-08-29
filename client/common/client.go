@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net"
 	"time"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/op/go-logging"
 )
@@ -23,6 +26,7 @@ type ClientConfig struct {
 type Client struct {
 	config ClientConfig
 	conn   net.Conn
+	isFinished bool
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -52,11 +56,26 @@ func (c *Client) createClientSocket() error {
 
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
-	// There is an autoincremental msgID to identify every message sent
-	// Messages if the message amount threshold has not been surpassed
-	for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
+	
+	msgID := 1; 
+	timeout := time.After(c.config.LoopPeriod * time.Duration(c.config.LoopAmount))
+
+	loop:
+	for {
+		select {
+		case <-timeout:
+			log.Infof("action: timeout_detected | result: success | client_id: %v", c.config.ID)
+			break loop
+		default:
+			if c.isFinished {
+				break loop
+		}
+
 		// Create the connection the server in every loop iteration. Send an
-		c.createClientSocket()
+		err := c.createClientSocket()
+		if err != nil {
+			return
+		}
 
 		// TODO: Modify the send to avoid short-write
 		fmt.Fprintf(
@@ -65,6 +84,7 @@ func (c *Client) StartClientLoop() {
 			c.config.ID,
 			msgID,
 		)
+
 		msg, err := bufio.NewReader(c.conn).ReadString('\n')
 		c.conn.Close()
 
@@ -81,9 +101,32 @@ func (c *Client) StartClientLoop() {
 			msg,
 		)
 
+		msgID++
+
 		// Wait a time between sending one message and the next one
 		time.Sleep(c.config.LoopPeriod)
 
+		}
+	
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+}
+
+func (c *Client) Shutdown() error {
+	if c.conn != nil {
+		err := c.conn.Close()
+	}
+	if err != nil {
+		log.Errorf("action: shutdown | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return err
+	}
+	log.Infof("action: shutdown | result: success | client_id: %v | message: connection closed", c.config.ID)
+
+	c.isFinished = true
+	log.Infof("action: shutdown | result: success | client_id: %v | message: client finished", c.config.ID)
+
+	return nil
 }

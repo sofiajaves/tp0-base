@@ -111,5 +111,27 @@ func main() {
 	}
 
 	client := common.NewClient(clientConfig)
-	client.StartClientLoop()
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+
+	stopChan := make(chan struct{})
+
+	go func() {
+		client.StartClientLoop()
+		close(stopChan) // Notify that the client loop has finished
+	}
+
+	select {
+	case signal := <-signals:
+		log.Infof("action: signal_received | result: success | client_id: %v | signal: %v", clientConfig.ID, signal)
+		if err := client.Shutdown(); err != nil {
+			log.Errorf("action: client_shutdown | result: fail | client_id: %v | error: %v", clientConfig.ID, err)
+		}
+		<- stopChan
+	case <-stopChan:
+		break
+	}
+
+	log.Infof("action: client_finished | result: success | client_id: %v", clientConfig.ID)
 }
