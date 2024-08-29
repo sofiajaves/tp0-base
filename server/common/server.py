@@ -25,7 +25,8 @@ class Server:
 
         while self._is_running:
             client_sock = self.__accept_new_connection()
-            self.__handle_client_connection(client_sock)
+            if client_sock:
+                self.__handle_client_connection(client_sock)
 
 
     def __handle_client_connection(self, client_sock):
@@ -37,6 +38,8 @@ class Server:
         """
         try:
             # TODO: Modify the receive to avoid short-reads
+            if not client_sock:
+                return
             msg = client_sock.recv(1024).rstrip().decode('utf-8')
             addr = client_sock.getpeername()
             logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
@@ -57,12 +60,14 @@ class Server:
 
         # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
+        if not self._is_running or self._server_socker.fileno() == -1:
+            return None
         try:
             c, addr = self._server_socket.accept()
             logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
             return c
         except OSError as e:
-            logging.info('action: accept_connections | result: fail | error: {e}')
+            logging.info(f'action: accept_connections | result: fail | error: {e}')
             return None
     
     def __signal_handler(self, signal, frame):
@@ -74,5 +79,10 @@ class Server:
         """
         logging.info("action: signal_handler SIGTERM| result: in_progress")
         self._is_running = False
-        self._server_socket.close()
+        try:
+            if self._server_socket:
+                self._server_socket.close()
+                logging.info("action: signal_handler SIGTERM | result: success | server scoket closed")
+        except OSError as e:
+            logging.error(f"action: signal_handler SIGTERM | result: fail | error: {e}")
         logging.info("action: signal_handler SIGTERM | result: success")
