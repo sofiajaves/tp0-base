@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"net"
 	"time"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/op/go-logging"
 )
@@ -114,16 +111,15 @@ func (c *Client) StartClientLoop() {
 
 func (c *Client) Shutdown() error {
 	if c.conn != nil {
-		err := c.conn.Close()
+		if err := c.conn.Close(); err != nil {
+			log.Errorf("action: shutdown | result: fail | client_id: %v | error: %v",
+				c.config.ID,
+				err,
+			)
+			return err
+		}
+		log.Infof("action: shutdown | result: success | client_id: %v | message: connection closed", c.config.ID)
 	}
-	if err != nil {
-		log.Errorf("action: shutdown | result: fail | client_id: %v | error: %v",
-			c.config.ID,
-			err,
-		)
-		return err
-	}
-	log.Infof("action: shutdown | result: success | client_id: %v | message: connection closed", c.config.ID)
 
 	c.isFinished = true
 	log.Infof("action: shutdown | result: success | client_id: %v | message: client finished", c.config.ID)

@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	"os/signal"
+	"syscall"
 
 	"github.com/op/go-logging"
 	"github.com/pkg/errors"
@@ -120,7 +122,7 @@ func main() {
 	go func() {
 		client.StartClientLoop()
 		close(stopChan) // Notify that the client loop has finished
-	}
+	}()
 
 	select {
 	case signal := <-signals:
