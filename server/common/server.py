@@ -60,7 +60,7 @@ class Server:
 
         # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
-        if not self._is_running or self._server_socker.fileno() == -1:
+        if not self._is_running or self._server_socket.fileno() == -1:
             return None
         try:
             c, addr = self._server_socket.accept()
