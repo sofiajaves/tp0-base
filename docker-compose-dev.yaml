@@ -3,69 +3,89 @@ networks:
   testing_net:
     ipam:
       config:
-      - subnet: 172.25.125.0/24
+        - subnet: 172.25.125.0/24
       driver: default
 services:
   client1:
     container_name: client1
     depends_on:
-    - server
+      - server
     entrypoint: /client
     environment:
-    - CLI_ID=1
-    - CLI_LOG_LEVEL=DEBUG
+      - CLI_ID=1
+      - CLI_LOG_LEVEL=DEBUG
+      - CLI_NOMBRE=Santiago Lionel
+      - CLI_APELLIDO=Lorca
+      - CLI_DOCUMENTO=30904465
+      - CLI_NACIMIENTO=1999-03-17
+      - CLI_NUMERO=2201
     image: client:latest
     networks:
-    - testing_net
+      - testing_net
     volumes:
-    - ./client/config.yaml:/config.yaml
+      - ./client/config.yaml:/config.yaml
   client2:
     container_name: client2
     depends_on:
-    - server
+      - server
     entrypoint: /client
     environment:
-    - CLI_ID=2
-    - CLI_LOG_LEVEL=DEBUG
+      - CLI_ID=2
+      - CLI_LOG_LEVEL=DEBUG
+      - CLI_NOMBRE=Agustin Emanuel
+      - CLI_APELLIDO=Zambrano
+      - CLI_DOCUMENTO=21689196
+      - CLI_NACIMIENTO=2000-05-10
+      - CLI_NUMERO=9325
     image: client:latest
     networks:
-    - testing_net
+      - testing_net
     volumes:
-    - ./client/config.yaml:/config.yaml
+      - ./client/config.yaml:/config.yaml
   client3:
     container_name: client3
     depends_on:
-    - server
+      - server
     entrypoint: /client
     environment:
-    - CLI_ID=3
-    - CLI_LOG_LEVEL=DEBUG
+      - CLI_ID=3
+      - CLI_LOG_LEVEL=DEBUG
+      - CLI_NOMBRE=Tiago Nicolás
+      - CLI_APELLIDO=Rivera
+      - CLI_DOCUMENTO=34407251
+      - CLI_NACIMIENTO=2001-08-29
+      - CLI_NUMERO=1033
     image: client:latest
     networks:
-    - testing_net
+      - testing_net
     volumes:
-    - ./client/config.yaml:/config.yaml
+      - ./client/config.yaml:/config.yaml
   client4:
     container_name: client4
     depends_on:
-    - server
+      - server
     entrypoint: /client
     environment:
-    - CLI_ID=4
-    - CLI_LOG_LEVEL=DEBUG
+      - CLI_ID=4
+      - CLI_LOG_LEVEL=DEBUG
+      - CLI_NOMBRE=Camila Rocio
+      - CLI_APELLIDO=Varela
+      - CLI_DOCUMENTO=37130775
+      - CLI_NACIMIENTO=1995-05-09
+      - CLI_NUMERO=4179
     image: client:latest
     networks:
-    - testing_net
+      - testing_net
     volumes:
-    - ./client/config.yaml:/config.yaml
+      - ./client/config.yaml:/config.yaml
   server:
     container_name: server
     entrypoint: python3 /main.py
     environment:
-    - PYTHONUNBUFFERED=1
-    - LOGGING_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
     image: server:latest
     networks:
-    - testing_net
+      - testing_net
     volumes:
-    - ./server/config.ini:/config.ini
+      - ./server/config.ini:/config.ini
