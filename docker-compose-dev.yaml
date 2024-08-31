@@ -14,11 +14,6 @@ services:
     environment:
       - CLI_ID=1
       - CLI_LOG_LEVEL=DEBUG
-      - CLI_NOMBRE=Santiago Lionel
-      - CLI_APELLIDO=Lorca
-      - CLI_DOCUMENTO=30904465
-      - CLI_NACIMIENTO=1999-03-17
-      - CLI_NUMERO=2201
     image: client:latest
     networks:
       - testing_net
@@ -32,11 +27,6 @@ services:
     environment:
       - CLI_ID=2
       - CLI_LOG_LEVEL=DEBUG
-      - CLI_NOMBRE=Agustin Emanuel
-      - CLI_APELLIDO=Zambrano
-      - CLI_DOCUMENTO=21689196
-      - CLI_NACIMIENTO=2000-05-10
-      - CLI_NUMERO=9325
     image: client:latest
     networks:
       - testing_net
@@ -50,11 +40,6 @@ services:
     environment:
       - CLI_ID=3
       - CLI_LOG_LEVEL=DEBUG
-      - CLI_NOMBRE=Tiago Nicolás
-      - CLI_APELLIDO=Rivera
-      - CLI_DOCUMENTO=34407251
-      - CLI_NACIMIENTO=2001-08-29
-      - CLI_NUMERO=1033
     image: client:latest
     networks:
       - testing_net
@@ -68,11 +53,6 @@ services:
     environment:
       - CLI_ID=4
       - CLI_LOG_LEVEL=DEBUG
-      - CLI_NOMBRE=Camila Rocio
-      - CLI_APELLIDO=Varela
-      - CLI_DOCUMENTO=37130775
-      - CLI_NACIMIENTO=1995-05-09
-      - CLI_NUMERO=4179
     image: client:latest
     networks:
       - testing_net
