@@ -1,17 +1,20 @@
 package common
 
+import (
+	"fmt"
+	"os"
+
+	"github.com/op/go-logging"
+)
+
 type BetAgency struct {
-	bet *Bet
 	client *Client
 }
 
-func NewBetAgency(client_config ClientConfig, name string, last_name string, document string,
-	birthdate string, number string) *BetAgency {
+func NewBetAgency(client_config ClientConfig) *BetAgency {
 		client := NewClient(client_config)
 
-		bet := NewBet(client_config.ID, name, last_name, document, birthdate, number)
 		bet_agency := &BetAgency{
-			bet: bet,
 			client: client,
 		}
 
@@ -32,5 +35,33 @@ func (bet_agency *BetAgency) SendBet() {
 }
 
 func (agency *BetAgency) Start() {
-	agency.SendBet()
+	file, err := osOpen(fmt.Sprintf("/dataset/agency-%s.csv"), agency.client.config.ID)
+	
+	defer file.Close()
+	defer agency.client.Shutdown()
+
+	if err != nil {
+		log.Errorf("action: start bet agency | result: fail | client_id: %v | error: %v", agency.client.config.ID, err)
+		return
+	}
+
+	err = agency.client.CreateClientSocket()
+
+	if err != nil {
+		return
+	}
+
+	for {
+		bets, err := readBets(file, agency.client.config.ID, agency.client.config.MaxAmount)
+		if err != nil {
+			log.Errorf("action: read_bets | result: fail | client_id: %v | error: %v", agency.client.config.ID, err)
+			return
+		}
+		agency.SendBets(bets)
+	}
+}
+
+func (agency *BetAgency) SendBets(bets []*Bet) {
+	serializedBets := serializeMultipleBets(bets)
+	agency.client.SendMsg(serializedBets)
 }

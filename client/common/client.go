@@ -13,6 +13,7 @@ import (
 
 const CONFIRM_MSG_LEN = 3
 const MAX_MSG_LEN = 4
+const EXIT_MSG = "exit"
 
 var log = logging.MustGetLogger("log")
 
@@ -22,6 +23,7 @@ type ClientConfig struct {
 	ServerAddress string
 	LoopAmount    int
 	LoopPeriod    time.Duration
+	MaxAmount     int
 }
 
 // Client Entity that encapsulates how
@@ -72,21 +74,6 @@ func (c *Client) createClientSocket() error {
 		return err
 	}
 	c.conn = conn
-	return nil
-}
-
-func (c *Client) StartClient(msg []byte) error {
-	err := c.createClientSocket()
-	if err != nil {
-		return err
-	}
-	err = c.SendMsg(msg)
-	if err != nil {
-		log.Errorf("action: send_message | result: fail | client_id: %v | error: %v")
-		c.Shutdown()
-		return err
-	}
-	log.Infof("action: send_message | result: success | client_id: %v", c.config.ID)
 	return nil
 }
 
@@ -173,7 +160,7 @@ func (c *Client) SafeRecv(length int) (res []byte, res_error error) {
 }
 
 func (c *Client) Shutdown() error {
-
+	c.SendMsg([]byte(EXIT_MSG))
     if c.conn != nil {
         if err := c.conn.Close(); err != nil {
             log.Errorf("action: shutdown | result: fail | client_id: %v | error: %v",

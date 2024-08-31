@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"bytes"
 )
 
 type Bet struct {
@@ -29,4 +30,16 @@ func (b *Bet) serialize() []byte {
 	return []byte(fmt.Sprintf("%s|%s|%s|%s|%s|%s",
 	b.agency, b.first_name, b.last_name, 
 	b.document, b.birth_date, b.number))
+}
+
+func serializeMultipleBets(bets []*Bet) []byte {
+	serialized_bets := make([]byte, len(bets))
+
+	for i, bet := range bets {
+		if bet != nil {
+			serialized_bets[i] = bet.serialize()
+		}
+	}
+
+	return bytes.Join(serialized_bets, []byte(";"))
 }
