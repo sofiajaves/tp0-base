@@ -1,14 +1,19 @@
 import socket
 import logging
 import signal
-from common.utils import process_message
+from common.utils import decode_utf8, encode_string_utf8, load_bets, process_bets, get_winner_bets_by_agency
 
 
 MAX_MSG_SIZE = 4 
+CONFIRMATION_MSG_LEN = 3
 EXIT = "exit"
+WINNERS = "winners"
+SUCCESS_MSG = "succ"
+ERROR_MSG = "err"
+WAITING_MSG = "waiting"
 
 class Server:
-    def __init__(self, port, listen_backlog):
+    def __init__(self, port, listen_backlog, clients):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,6 +21,8 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self.client_socket = None
         self._is_running = True
+        self.clients = clients
+        self.finished_clients = 0
 
     def run(self):
         """
@@ -77,9 +84,8 @@ class Server:
                 self.__log_ip()
                 self.__check_exit(msg)
                 
-                process_message(msg)
+                self.process_message(msg)
 
-                self.__send_success_message()
         except OSError as e:
             self.__send_error_message()
             logging.error(f"action: receive_message | result: fail | error: {e}")
@@ -97,6 +103,7 @@ class Server:
                         logging.error(f'action: close_client_connection | result: fail | error: client disconnected')
                     logging.error(f'action: close_client_connection | result: fail | error: {e}')
             finally:
+                self.finished_clients += 1
                 self.client_socket.close()
                 self.client_socket = None
                 logging.info('action: close client connection | result: success')
@@ -130,27 +137,22 @@ class Server:
         logging.info("action: stop | result: success")
 
     def __send_success_message(self):
-        self.__safe_send("success")
+        self.__safe_send(encode_string_utf8(SUCCESS_MSG))
         logging.info("action: send_success_message | result: success")
 
     def __send_error_message(self):
-        self.__safe_send("error")
+        self.__safe_send(encode_string_utf8(ERROR_MSG))
         logging.error("action: send_error_message | result: success")
-
-    def __safe_send(self, message):
+    
+    def __safe_send(self, bytes_to_send):
         total_sent = 0
-        bytes_to_send = message.encode('utf-8')
 
-        while total_sent < len(message):
-            try: 
-                n = self.client_socket.send(bytes_to_send[total_sent:])
-                total_sent += n
-            except socket.error as e:
-                logging.error(f"action: safe_send | result: fail | error: {e}")
-                break
-            return
+        while total_sent < len(bytes_to_send):
+            n = self.client_socket.send(bytes_to_send[total_sent:])
+            total_sent += n
+        return
 
-    def __safe_receive(self, buf_len):
+    def __safe_receive(self, buf_len: int):
         msg = 0
         buffer = bytes()
         while msg < buf_len:
@@ -168,6 +170,37 @@ class Server:
                 return None
         return buffer
     
+    def process_message(self, msg: bytes):
+        message = decode_utf8(msg)
+        split_msg = message.split(",")
+        if message == EXIT:
+            raise socket.error("Client exited")
+        elif len(split_msg) == 2 and split_msg[0] == WINNERS:
+            self.__send_winners(split_msg[1])
+        else:
+            process_bets(message)
+            self.__send_success_message()
+
+    def __send_winners(self, agency: str):
+        if self.finished_clients < self.clients:
+            self.__send_and_wait_confirmation(encode_string_utf8(WAITING_MSG))
+            return
+        bets = load_bets()
+        winner_bets = get_winner_bets_by_agency(bets, agency)
+        docs = map(lambda bet: bet.document, winner_bets)
+        response = ",".join(docs)
+        self.__send_and_wait_confirmation(encode_string_utf8(response))
+
+    def __send_and_wait_confirmation(self, msg: bytes):
+
+        self.__safe_send(len(msg).to_bytes(MAX_MSG_SIZE, "little"))
+        if decode_utf8(self.__safe_receive(CONFIRMATION_MSG_LEN)) != SUCCESS_MSG:
+            raise socket.error("Client did not confirm message reception")
+        
+        self.__safe_send(msg)
+        if decode_utf8(self.__safe_receive(CONFIRMATION_MSG_LEN)) != SUCCESS_MSG:
+            raise socket.error("Client did not confirm message reception")
+
     def __log_ip(self):
         addr = self.client_socket.getpeername()
         logging.info(f"action: log_ip | result: success | ip: {addr[0]}")

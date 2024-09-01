@@ -34,6 +34,32 @@ def create_clients(file, clients):
     with open(file, 'w') as docker_compose:
         yaml.safe_dump(data, docker_compose, default_flow_style=False)
 
+def create_server(file, n):
+    with open(file, 'r') as docker_compose:
+        data = yaml.safe_load(docker_compose)
+
+    server = {
+        f'server': {
+            'container_name': 'server',
+            'image': 'server:latest',
+            'entrypoint': 'python3 /main.py',
+            'environment': [
+                'PYTHONUNBUFFERED=1',
+                'LOGGING_LEVEL=DEBUG',
+                'CLIENTS={n}'
+            ],
+            'networks': [
+                'testing_net'
+            ],
+            'volumes': [
+                './server/config.ini:/config.ini'
+            ]
+        }
+    }
+
+    with open(file, 'w') as docker_compose:
+        yaml.safe_dump(data, docker_compose, default_flow_style=False)
+
 if __name__ == '__main__':
     file = sys.argv[1]
     clients = int(sys.argv[2])
@@ -43,3 +69,4 @@ if __name__ == '__main__':
         sys.exit(1)
 
     create_clients(file, clients)
+    create_server(file, clients)

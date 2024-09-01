@@ -77,6 +77,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
+      - CLIENTS=5
     image: server:latest
     networks:
       - testing_net

@@ -17,7 +17,7 @@ class Bet:
         self.number = int(number)
 
     @staticmethod
-    def deserialize(msg: bytes):
+    def deserialize(msg: str):
         """
         Deserialize a message into a Bet object
         """
