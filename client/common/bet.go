@@ -5,6 +5,8 @@ import (
 	"bytes"
 )
 
+const BATCH_SEPARATOR = ";"
+
 type Bet struct {
 	agency string
 	first_name string
@@ -41,5 +43,5 @@ func serializeMultipleBets(bets []*Bet) []byte {
 		}
 	}
 
-	return bytes.Join(serialized_bets, []byte(";"))
+	return bytes.Join(serialized_bets, []byte(BATCH_SEPARATOR))
 }
