@@ -40,11 +40,10 @@ def process_message(msg: bytes):
     """
     Process a message from a client.
     """
-    logging.info(f"action: process_message | result: in progress | msg: {msg}")
     try:
         bets = Bet.deserialize_multiple_bets(msg.decode('utf-8'))
         store_bets(bets)
     except Exception as e:
-        logging.error(f"action: store bets | result: fail | error: {e}")
+        logging.error(f"action: apuesta_recibida | result: fail | error: {e}")
         return
-    logging.info(f"action: process_message | result: success | agency: {bets[0].agency} ")
+    logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
