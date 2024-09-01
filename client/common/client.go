@@ -160,8 +160,18 @@ func (c *Client) SafeRecv(length int) (res []byte, res_error error) {
 }
 
 func (c *Client) Shutdown() error {
-	c.SendMsg([]byte(EXIT_MSG))
-    if c.conn != nil {
+	if c.conn != nil {
+        err := c.SendMsg([]byte(EXIT_MSG))
+        if err != nil {
+            log.Errorf("action: shutdown | result: fail | client_id: %v | error: %v",
+                c.config.ID,
+                err,
+            )
+            // A pesar del error al enviar, continuamos con el cierre de la conexión
+        }
+		
+		time.Sleep(100 * time.Millisecond)
+
         if err := c.conn.Close(); err != nil {
             log.Errorf("action: shutdown | result: fail | client_id: %v | error: %v",
                 c.config.ID,

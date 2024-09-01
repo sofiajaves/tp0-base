@@ -38,7 +38,7 @@ func InitConfig() (*viper.Viper, error) {
 	v.BindEnv("loop", "period")
 	v.BindEnv("loop", "amount")
 	v.BindEnv("log", "level")
-	v.BindEnvEnv("batch", "maxAmount")
+	v.BindEnv("batch", "maxAmount")
 
 	// Try to read configuration from config file. If config file
 	// does not exists then ReadInConfig will fail but configuration
@@ -54,8 +54,16 @@ func InitConfig() (*viper.Viper, error) {
 	if _, err := time.ParseDuration(v.GetString("loop.period")); err != nil {
 		return nil, errors.Wrapf(err, "Could not parse CLI_LOOP_PERIOD env var as time.Duration.")
 	}
-	if _, err := strconv.ParseInt(v.GetString("maxAmount"), 10, 64); err != nil {
-		return v, nil
+
+	maxAmountStr := v.GetString("batch.maxAmount")
+    if maxAmountStr == "" {
+        maxAmountStr = "100" // Default value if not set
+    }
+
+	if _, err := strconv.Atoi(maxAmountStr); err != nil {
+		return v, errors.Wrapf(err, "Could not parse CLI_BATCH_MAXAMOUNT env var as int.")
+	}
+	return v, nil
 }
 
 // InitLogger Receives the log level to be set in go-logging as a string. This method
@@ -83,13 +91,13 @@ func InitLogger(logLevel string) error {
 // PrintConfig Print all the configuration parameters of the program.
 // For debugging purposes only
 func PrintConfig(v *viper.Viper) {
-	log.Infof("action: config | result: success | client_id: %s | server_address: %s | loop_amount: %v | loop_period: %v | log_level: %s",
+	log.Infof("action: config | result: success | client_id: %s | server_address: %s | loop_amount: %v | loop_period: %v | log_level: %s | batch_maxAmount: %v",
 		v.GetString("id"),
 		v.GetString("server.address"),
 		v.GetInt("loop.amount"),
 		v.GetDuration("loop.period"),
 		v.GetString("log.level"),
-		v.GetInt("batch.maxAmount")
+		v.GetInt("batch.maxAmount"),
 	)
 }
 

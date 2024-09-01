@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 	"bytes"
-	"errors"
 )
 
 func readBets(file *os.File, id string, chunk_size int) ([]*Bet, error){
@@ -13,16 +12,16 @@ func readBets(file *os.File, id string, chunk_size int) ([]*Bet, error){
 
 	n, err := file.Read(buffer)
 	if n == 0 {
-		return nil, errors.New("EOF")
+		return nil, io.EOF
 	}
 	if err != nil {
 		if err == io.EOF {
-			return nil, errors.New("EOF")
+			return nil, err
 		}
 		return nil, err
 	}
 
-	bets := string(bytes.Trim(buffer, "\r"), "\x00")
+	bets := string(bytes.Trim(bytes.Trim(buffer, "\r"), "\x00"))
 	bets_str := strings.Split(bets, "\n")
 
 	if !strings.HasSuffix(bets, "\r") && !strings.HasSuffix(bets, "\n") {
@@ -35,7 +34,7 @@ func readBets(file *os.File, id string, chunk_size int) ([]*Bet, error){
 	return parseBets(bets_str, id), nil
 }
 
-func parseBets(bets_str, []string, id string) []*Bet {
+func parseBets(bets_str []string, id string) []*Bet {
 	bets := make([]*Bet, len(bets_str))
 
 	for i, bet_str := range bets_str {

@@ -33,7 +33,7 @@ func (b *Bet) serialize() []byte {
 }
 
 func serializeMultipleBets(bets []*Bet) []byte {
-	serialized_bets := make([]byte, len(bets))
+	serialized_bets := make([][]byte, len(bets))
 
 	for i, bet := range bets {
 		if bet != nil {

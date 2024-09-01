@@ -3,8 +3,7 @@ package common
 import (
 	"fmt"
 	"os"
-
-	"github.com/op/go-logging"
+	"io"
 )
 
 type BetAgency struct {
@@ -21,40 +20,32 @@ func NewBetAgency(client_config ClientConfig) *BetAgency {
 	return bet_agency
 }
 
-func (bet_agency *BetAgency) SendBet() {
-	bet := bet_agency.bet
-	err := bet_agency.client.StartClient(bet.serialize())
-
-	if err != nil {
-		log.Errorf("action: send_bet | result: fail | client_id: %v | error: %v", 
-			bet_agency.client.config.ID, err)
-		return
-	}
-
-	log.Infof("action: send_bet | result: success | client_id: %v", bet_agency.client.config.ID)
-}
-
 func (agency *BetAgency) Start() {
-	file, err := osOpen(fmt.Sprintf("/dataset/agency-%s.csv"), agency.client.config.ID)
-	
-	defer file.Close()
-	defer agency.client.Shutdown()
-
+	file, err := os.Open(fmt.Sprintf("/dataset/agency-%s.csv", agency.client.config.ID))
 	if err != nil {
 		log.Errorf("action: start bet agency | result: fail | client_id: %v | error: %v", agency.client.config.ID, err)
 		return
 	}
 
-	err = agency.client.CreateClientSocket()
-
+	defer file.Close()
+	
+	
+	err = agency.client.createClientSocket()
+	
 	if err != nil {
 		return
 	}
+	defer agency.client.Shutdown()
 
 	for {
 		bets, err := readBets(file, agency.client.config.ID, agency.client.config.MaxAmount)
 		if err != nil {
-			log.Errorf("action: read_bets | result: fail | client_id: %v | error: %v", agency.client.config.ID, err)
+			if err == io.EOF {
+				log.Infof("action: read_bets | result: success | client_id: %v | message: EOF", agency.client.config.ID)
+				break
+			} else {
+				log.Errorf("action: read_bets | result: fail | client_id: %v | error: %v", agency.client.config.ID, err)
+			}
 			return
 		}
 		agency.SendBets(bets)
