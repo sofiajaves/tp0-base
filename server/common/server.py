@@ -112,8 +112,6 @@ class Server:
                     logging.error(f'action: close_client_connection | result: fail | error: {e}')
             finally:
                 self.finished_clients += 1
-                logging.debug(f"About to close a socket. Finished clients: {self.finished_clients}")
-                logging.debug(f"Total clients: {self.clients}")
                 self.client_socket.close()
                 self.client_socket = None
                 logging.info('action: close client connection | result: success')
@@ -183,21 +181,21 @@ class Server:
     def process_message(self, msg: bytes):
         message = decode_utf8(msg)
         split_msg = message.split(",")
-        logging.debug(f"Received message: {message}")
-        logging.debug(f"Split message: {split_msg}, lenght: {len(split_msg)}")
         if msg == EXIT:
             raise socket.error("Client disconnected")
         elif len(split_msg) == 2 and split_msg[0] == WINNERS:
-            logging.info("action: sorteo | result: success")
             self.__send_winners(split_msg[1])
         else:
             process_bets(message)
             self.__send_success_message()
 
     def __send_winners(self, agency: str):
-        if self.finished_clients < 5:
+        if self.finished_clients < self.clients:
+            logging.debug("clientes: %d", self.clients)
             self.__send_and_wait_confirmation(encode_string_utf8(WAITING_MSG))
             return
+        elif self.finished_clients == 5:
+            logging.info("action: sorteo | result: success")
         bets = load_bets()
         winner_bets = get_winner_bets_by_agency(bets, agency)
         docs = map(lambda bet: bet.document, winner_bets)

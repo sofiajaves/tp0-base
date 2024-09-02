@@ -21,18 +21,20 @@ class Bet:
         """
         Deserialize a message into a Bet object
         """
-        bet_agency, name, last_name, document, birthdate, number = msg.split(BET_MSG_SEPARATOR)
+        fields = msg.split(BET_MSG_SEPARATOR)
+        if len(fields) != 6:
+            return None
+        bet_agency, name, last_name, document, birthdate, number = fields
        
         return Bet(bet_agency, name, last_name, document, birthdate, number)
         
     @staticmethod
-    def deserialize_multiple_bets(msg: str):
-        """
-        Deserialize a message into a list of Bet objects
-        """
+    def deserialize_multiple_bets(message: str):
         bets = []
-        for bet in msg.split(BET_CHUNK_SEPARATOR):
+        for bet in message.split(BET_CHUNK_SEPARATOR):
             if not bet:
                 continue
-            bets.append(Bet.deserialize(bet))
+            deserialized_bet = Bet.deserialize(bet)
+            if deserialized_bet:
+                bets.append(deserialized_bet)
         return bets

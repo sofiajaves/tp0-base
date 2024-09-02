@@ -13,7 +13,6 @@ func readBets(file *os.File, id string, chunk_size int) ([]*Bet, error){
 	if err != nil {
 		log.Errorf("action: read_bets POINTER | result: fail | initial position: %d", pos)
 	}
-	log.Debugf("action: read_bets POINTER | result: success | initial position: %d", pos)
 
 	n, err := file.Read(buffer)
 	if n == 0 {

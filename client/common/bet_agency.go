@@ -79,7 +79,7 @@ func (agency *BetAgency) SendBets(bets []*Bet) {
 func (agency *BetAgency) AskForWinners() error {
 	var err error
 
-	message := fmt.Sprintf("winnners,%s", agency.client.config.ID)
+	message := fmt.Sprintf("winners,%s", agency.client.config.ID)
 
 	for {
 		agency.client.createClientSocket()
@@ -110,7 +110,7 @@ func (agency *BetAgency) AnnounceWinners(winners []string) {
 	if len(winners[0]) == 0 {
 		length = 0
 	}
-	log.Infof("action: winners_announced | result: success | client_id: %v | winners: %v", agency.client.config.ID, length)
+	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %v", length)
 }
 
 func checkWinnersAnnouncementMsg(message []byte) bool {
