@@ -11,7 +11,7 @@ import (
 	"github.com/op/go-logging"
 )
 
-const CONFIRM_MSG_LEN = 3
+const CONFIRM_MSG_LEN = 4    
 const MAX_MSG_LEN = 4
 const EXIT_MSG = "exit"
 const SUCCESS_MSG = "succ"

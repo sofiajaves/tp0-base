@@ -5,7 +5,7 @@ from common.utils import decode_utf8, encode_string_utf8, load_bets, process_bet
 
 
 MAX_MSG_SIZE = 4 
-CONFIRMATION_MSG_LEN = 3
+CONFIRMATION_MSG_LEN = 4
 EXIT = "exit"
 WINNERS = "winners"
 SUCCESS_MSG = "succ"
@@ -71,13 +71,19 @@ class Server:
         client socket will also be closed
         """
         try:
+            self.client_socket.settimeout(10)
             while self._is_running and self.client_socket:
                 msg_length = self.__receive_message_length()
 
                 if msg_length == 0:
                     return
 
-                msg = self.__safe_receive(msg_length).rstrip()
+                msg = self.__safe_receive(msg_length)
+                if msg is None:  # Verifica si se recibió None, lo que indica un error
+                    logging.error("action: handle_client_connection | result: fail | error: no message received")
+                    return
+
+                msg = msg.rstrip()
                 if not msg:
                     logging.error("action: handle_client_connection | result: fail | error: client disconnected")
                     return
@@ -85,7 +91,9 @@ class Server:
                 self.__check_exit(msg)
                 
                 self.process_message(msg)
-
+        except socket.timeout:
+            self.__send_error_message()
+            logging.error("action: handle_client_connection !!! | result: fail | error: timeout")
         except OSError as e:
             self.__send_error_message()
             logging.error(f"action: receive_message | result: fail | error: {e}")
@@ -104,6 +112,8 @@ class Server:
                     logging.error(f'action: close_client_connection | result: fail | error: {e}')
             finally:
                 self.finished_clients += 1
+                logging.debug(f"About to close a socket. Finished clients: {self.finished_clients}")
+                logging.debug(f"Total clients: {self.clients}")
                 self.client_socket.close()
                 self.client_socket = None
                 logging.info('action: close client connection | result: success')
@@ -173,16 +183,19 @@ class Server:
     def process_message(self, msg: bytes):
         message = decode_utf8(msg)
         split_msg = message.split(",")
-        if message == EXIT:
-            raise socket.error("Client exited")
+        logging.debug(f"Received message: {message}")
+        logging.debug(f"Split message: {split_msg}, lenght: {len(split_msg)}")
+        if msg == EXIT:
+            raise socket.error("Client disconnected")
         elif len(split_msg) == 2 and split_msg[0] == WINNERS:
+            logging.info("action: sorteo | result: success")
             self.__send_winners(split_msg[1])
         else:
             process_bets(message)
             self.__send_success_message()
 
     def __send_winners(self, agency: str):
-        if self.finished_clients < self.clients:
+        if self.finished_clients < 5:
             self.__send_and_wait_confirmation(encode_string_utf8(WAITING_MSG))
             return
         bets = load_bets()
@@ -190,6 +203,7 @@ class Server:
         docs = map(lambda bet: bet.document, winner_bets)
         response = ",".join(docs)
         self.__send_and_wait_confirmation(encode_string_utf8(response))
+        
 
     def __send_and_wait_confirmation(self, msg: bytes):
 
