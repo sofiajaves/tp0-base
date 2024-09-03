@@ -77,12 +77,12 @@ class Server:
         When SIGTERM signal is received, the server stops accepting new
         connections and finishes the current ones
         """
-        logging.info("action: signal_handler SIGTERM| result: in_progress")
+        # logging.info("action: signal_handler SIGTERM| result: in_progress")
         self._is_running = False
         try:
             if self._server_socket:
                 self._server_socket.close()
-                logging.info("action: signal_handler SIGTERM | result: success | server scoket closed")
+                logging.info("action: exit | result: success | server socket closed")
         except OSError as e:
-            logging.error(f"action: signal_handler SIGTERM | result: fail | error: {e}")
-        logging.info("action: signal_handler SIGTERM | result: success")
+            logging.error(f"action: exit | result: fail | error: {e}")
+        logging.info("action: exit | result: success")
