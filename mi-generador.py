@@ -15,7 +15,6 @@ def create_clients(file, clients):
                 'entrypoint': '/client',
                 'environment': [
                     f'CLI_ID={i}',
-                    'CLI_LOG_LEVEL=DEBUG'
                 ],
                 'networks': [
                     'testing_net'
