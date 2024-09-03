@@ -46,7 +46,7 @@ def create_server(file, n):
             'environment': [
                 'PYTHONUNBUFFERED=1',
                 'LOGGING_LEVEL=DEBUG',
-                'CLIENTS={n}'
+                f'CLIENTS={n}'
             ],
             'networks': [
                 'testing_net'
