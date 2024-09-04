@@ -82,7 +82,7 @@ class Server:
         try:
             if self._server_socket:
                 self._server_socket.close()
-                logging.info(f"action: exit | result: success | server socket closed")
+                logging.info(f"action: exit | result: success | detail: server socket closed")
         except OSError as e:
             logging.error(f"action: exit | result: fail | error: {e}")
         logging.info(f"action: exit | result: success")
