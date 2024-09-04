@@ -126,14 +126,14 @@ func main() {
 
 	select {
 	case signal := <-signals:
-		log.Infof("action: signal_received | result: success | client_id: %v | signal: %v", clientConfig.ID, signal)
+		//log.Infof("action: exit | result: in_progress")
 		if err := client.Shutdown(); err != nil {
-			log.Errorf("action: client_shutdown | result: fail | client_id: %v | error: %v", clientConfig.ID, err)
+			log.Errorf("action: exit | result: fail")
 		}
+		log.Infof("action: exit | result: success")
 		<- stopChan
 	case <-stopChan:
 		break
 	}
 
-	log.Infof("action: client_finished | result: success | client_id: %v", clientConfig.ID)
 }

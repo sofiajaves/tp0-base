@@ -119,11 +119,11 @@ func (c *Client) Shutdown() error {
 			)
 			return err
 		}
-		log.Infof("action: shutdown | result: success | client_id: %v | message: connection closed", c.config.ID)
+		//log.Infof("action: shutdown | result: success | client_id: %v | message: connection closed", c.config.ID)
 	}
 
 	c.isFinished = true
-	log.Infof("action: shutdown | result: success | client_id: %v | message: client finished", c.config.ID)
+	//log.Infof("action: shutdown | result: success | client_id: %v | message: client finished", c.config.ID)
 
 	return nil
 }
