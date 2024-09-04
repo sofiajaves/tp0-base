@@ -101,7 +101,7 @@ func main() {
 	}
 
 	// Print program config with debugging purposes
-	PrintConfig(v)
+	//PrintConfig(v)
 
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),
