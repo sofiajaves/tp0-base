@@ -18,20 +18,59 @@ Los targets disponibles son:
 * **build**: Compila la aplicación cliente para ejecución en el _host_ en lugar de en docker. La compilación de esta forma es mucho más rápida pero requiere tener el entorno de Golang instalado en la máquina _host_.
 
 ### Servidor
-El servidor del presente ejemplo es un EchoServer: los mensajes recibidos por el cliente son devueltos inmediatamente. El servidor actual funciona de la siguiente forma:
-1. Servidor acepta una nueva conexión.
-2. Servidor recibe mensaje del cliente y procede a responder el mismo.
-3. Servidor desconecta al cliente.
-4. Servidor procede a recibir una conexión nuevamente.
+Para este ejercicio (ej6) se pide que se reciba mas de 1 sola apuesta por agencia (cliente). Se pide que el servidor sea un emulador de la Loteria Nacional recibiendo asi distintas apuestas de diferentes clientes y almacenarlas. Para luego realizar un sorteo entre estas.
+
+Funcionamiento:
+
+1. El servidor acepta nueva conexion
+2. El servidor recibe un mensaje del cliente. Contendra la longitud del batch o chunk de apuestas que se estaran enviando y este procedera a responder con un 'suc' (success) si fue recibido correctamente.
+3. El servidor recibe otro mensaje del cliente (efectivamente contendra el chunk de apuestas de la longitud coinicidente del mensaje que recibio anteriormente por parte del cliente).
+4. El servidor almacena en el archivo de bets.csv la apuesta y responde nuevamente con 'suc'
+5. El servidor desconecta al cliente
+6. El servidor procede a recibir una conexion nuevamente del cliente
 
 ### Cliente
-El cliente del presente ejemplo se conecta reiteradas veces al servidor y envía mensajes de la siguiente forma.
-1. Cliente se conecta al servidor.
-2. Cliente genera mensaje incremental.
-recibe mensaje del cliente y procede a responder el mismo.
-3. Cliente envía mensaje al servidor y espera mensaje de respuesta.
-Servidor desconecta al cliente.
-4. Cliente verifica si aún debe enviar un mensaje y si es así, vuelve al paso 2.
+El cliente en este caso resperesenta una agencia de apuestas (BetAgency) que en efecto enviara apuestas al servidor para que las almacene.
+
+Funcionamiento:
+
+1. El cliente se conecta al servidor
+2. El cliente lee el archivo de apuestas. Leera una cantidad de bytes que se establece en la configuracion con la variable de `maxAmount`.
+3. El cliente envia la longitud del chunk a enviar
+4. Recibe la confirmacion del servidor
+5. El cliente procede a enviar el chunk de apuestas
+6. Recibe la confirmacion nuevamente del servidor
+7. Retorna al paso 3 hasta llegar al final del archivo (no hay mas apuestas para enviar)
+8. Finaliza su ejecucion
+
+![flujo programa]()
+
+### Protocolo Implementado
+
+El mensaje que se envia del cliente al servidor se conforma por la informacion de una apuesta:
+`{agencia}{nombre}{apellido}{documento}{fecha de nacimiento}{numero de apuesta}`
+
+En donde cada uno:
+* `Agencia`: Es un numero entero de cualquier tamaño
+* `Nombre`: Una cadena de tamaño variable
+* `Documento`: Es un numero de 8 digitos
+* `Fecha de nacimiento`: Una cadena que indica la fecha en el siguiente formato: 'YYYY-MM-DD'
+* `Numero de apuesta`: Es un numero de 4 digitos que representa el numero a apostar
+
+  Flujo del programa:
+  Para este caso se probo con 1 sola apuesta y los datos fueron insertados en el `docker-compose` en los clientes:
+```
+- CLI_NOMBRE=Santiago Lionel
+- CLI_APELLIDO=Lorca
+- CLI_DOCUMENTO=30904465
+- CLI_NACIMIENTO=1999-03-17
+- CLI_NUMERO=2201
+```
+### Manejo de chunks
+
+Para que se pueda enviar mas de una apuesta en un mismo mensaje se utilizo el caracter `;` para distinguir diferentes apuestas en el mismo mensaje.
+
+El tamaño del chunk se configura con la variable de entorno `maxAmount`. La cantidad de apuestas que se manda es variable, dependera de la longitud de los campos que componen a cada apuesta.
 
 Al ejecutar el comando `make docker-compose-up` para comenzar la ejecución del ejemplo y luego el comando `make docker-compose-logs`, se observan los siguientes logs:
 
