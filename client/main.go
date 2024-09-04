@@ -5,8 +5,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	"os/signal"
-	"syscall"
 
 	"github.com/op/go-logging"
 	"github.com/pkg/errors"
@@ -113,30 +111,6 @@ func main() {
 	}
 
 	client := common.NewClient(clientConfig)
-
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
-
-	stopChan := make(chan struct{})
-
-	go func() {
-		client.StartClientLoop()
-		close(stopChan) // Notify that the client loop has finished
-	}()
-
-	select {
-	case signal := <-signals:
-		//log.Infof("action: exit | result: in_progress")
-		if err := client.Shutdown(); err != nil {
-			log.Errorf("action: exit | result: fail")
-			os.Exit(1)
-		} else {
-		log.Infof("action: exit | result: success")
-		<- stopChan
-		os.Exit(0)
-		}
-	case <-stopChan:
-		os.Exit(0)
-	}
+	client.StartClientLoop()
 
 }

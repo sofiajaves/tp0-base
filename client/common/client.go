@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net"
 	"time"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/op/go-logging"
 )
@@ -31,8 +34,27 @@ type Client struct {
 func NewClient(config ClientConfig) *Client {
 	client := &Client{
 		config: config,
+		isFinished: false,
 	}
+	InitializeSignalListener(client)
 	return client
+}
+
+func InitializeSignalListener(client *Client) {
+	sigs := make(chan os.Signal, 1)
+
+	signal.Notify(sigs, syscall.SIGTERM)
+	go func(client *Client) {
+		sig := <-sigs
+		log.Infof("action: received termination signal | result: in_progress | signal: %s", sig)
+		err := client.Shutdown()
+	
+	if err != nil {
+		log.Infof("action: received termination signal | result: error | signal: %s | error: %v", sig, err)
+		return
+	}
+	log.Infof("action: received termination signal | result: success | signal: %s", sig)
+	}(client)
 }
 
 // CreateClientSocket Initializes client socket. In case of
@@ -52,78 +74,59 @@ func (c *Client) createClientSocket() error {
 	return nil
 }
 
-// StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClientLoop() {
-	
-	msgID := 1; 
-	timeout := time.After(c.config.LoopPeriod * time.Duration(c.config.LoopAmount))
-
-	loop:
-	for {
-		select {
-		case <-timeout:
-			log.Infof("action: timeout_detected | result: success | client_id: %v", c.config.ID)
-			break loop
-		default:
-			if c.isFinished {
-				break loop
-		}
-
-		// Create the connection the server in every loop iteration. Send an
-		err := c.createClientSocket()
-		if err != nil {
-			return
-		}
-
-		// TODO: Modify the send to avoid short-write
-		fmt.Fprintf(
-			c.conn,
-			"[CLIENT %v] Message N°%v\n",
-			c.config.ID,
-			msgID,
-		)
-
-		msg, err := bufio.NewReader(c.conn).ReadString('\n')
-		c.conn.Close()
-
-		if err != nil {
-			log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		}
-
-		log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
-			c.config.ID,
-			msg,
-		)
-
-		msgID++
-
-		// Wait a time between sending one message and the next one
-		time.Sleep(c.config.LoopPeriod)
-
-		}
-	
-	}
-	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+func (c *Client) Shutdown() error {
+	c.conn.Close()
+	c.isFinished = true
+	return nil
 }
 
-func (c *Client) Shutdown() error {
-	if c.conn != nil {
-		if err := c.conn.Close(); err != nil {
-			log.Errorf("action: shutdown | result: fail | client_id: %v | error: %v",
+// StartClientLoop Send messages to the client until some time threshold is met
+func (c *Client) StartClientLoop() {
+	// autoincremental msgID to identify every message sent
+	msgID := 1
+
+	loop:
+		// Send messages if the loopLapse threshold has not been surpassed
+		for timeout := time.After(c.config.LoopPeriod * time.Duration(c.config.LoopAmount)); !c.isFinished; {
+			select {
+			case <-timeout:
+				log.Infof("action: timeout_detected | result: success | client_id: %v",
+					c.config.ID,
+				)
+				break loop
+			default:
+			}
+			// Create the connection the server in every loop iteration. Send an
+			c.createClientSocket()
+			// TODO: Modify the send to avoid short-write
+			fmt.Fprintf(
+				c.conn,
+				"[CLIENT %v] Message N°%v\n",
 				c.config.ID,
-				err,
+				msgID,
 			)
-			return err
+			msg, err := bufio.NewReader(c.conn).ReadString('\n')
+			msgID++
+			c.conn.Close()
+
+			if err != nil {
+				log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
+					c.config.ID,
+					err,
+				)
+				return
+			}
+			log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
+				c.config.ID,
+				msg,
+			)
+
+			// Wait a time between sending one message and the next one
+
+			if !c.isFinished {
+				time.Sleep(c.config.LoopPeriod)
+			}
 		}
-		//log.Infof("action: shutdown | result: success | client_id: %v | message: connection closed", c.config.ID)
-	}
 
-	c.isFinished = true
-	//log.Infof("action: shutdown | result: success | client_id: %v | message: client finished", c.config.ID)
-
-	return nil
+		log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
