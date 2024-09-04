@@ -129,10 +129,14 @@ func main() {
 		//log.Infof("action: exit | result: in_progress")
 		if err := client.Shutdown(); err != nil {
 			log.Errorf("action: exit | result: fail")
-		}
+			os.Exit(1)
+		} else {
 		log.Infof("action: exit | result: success")
 		<- stopChan
+		os.Exit(0)
+		}
 	case <-stopChan:
+		os.Exit(0)
 	}
 
 }
