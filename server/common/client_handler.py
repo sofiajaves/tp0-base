@@ -168,4 +168,4 @@ class ClientHandler:
 
 def create_client_handler(client_socket, file_lock, finished_clients, clients):
     handler = ClientHandler(client_socket, file_lock, finished_clients, clients)
-    handler.handle_client_connection
+    handler.handle_client_connection()

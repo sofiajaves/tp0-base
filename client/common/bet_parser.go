@@ -9,14 +9,13 @@ import (
 
 func readBets(file *os.File, id string, chunk_size int) ([]*Bet, error){
 	buffer := make([]byte, chunk_size)
-	pos, err := file.Seek(0, io.SeekCurrent)
+	_, err := file.Seek(0, io.SeekCurrent)
 	if err != nil {
-		log.Errorf("action: read_bets POINTER | result: fail | initial position: %d", pos)
+		return nil, err
 	}
 
 	n, err := file.Read(buffer)
 	if n == 0 {
-		log.Infof("action: read_bets EOF | result: MEH | client_id: %v | message: EOF", id)
 		return nil, io.EOF
 	}
 	if err != nil {
