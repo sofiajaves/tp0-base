@@ -41,6 +41,9 @@ Funcionamiento:
 5. Recibe la confirmacion nuevamente del servidor
 6. Finaliza su ejecucion
 
+![flujo programa]()
+)
+
 ### Protocolo Implementado
 
 El mensaje que se envia del cliente al servidor se conforma por la informacion de una apuesta:
