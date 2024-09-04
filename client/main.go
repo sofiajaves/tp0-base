@@ -133,7 +133,6 @@ func main() {
 		log.Infof("action: exit | result: success")
 		<- stopChan
 	case <-stopChan:
-		break
 	}
 
 }
