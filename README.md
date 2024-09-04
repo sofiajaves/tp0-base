@@ -41,8 +41,8 @@ Funcionamiento:
 5. Recibe la confirmacion nuevamente del servidor
 6. Finaliza su ejecucion
 
-![flujo programa]()
-)
+![flujo programa](https://github.com/sofiajaves/tp0-base/blob/ej5/imgs/flujo%20del%20programa.png)
+
 
 ### Protocolo Implementado
 
