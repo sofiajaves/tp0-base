@@ -14,7 +14,6 @@ WAITING_MSG = "waiting"
 
 class Server:
     def __init__(self, port, listen_backlog, clients):
-        # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))

@@ -84,11 +84,11 @@ class ClientHandler:
 
     def __send_success_message(self):
         self.__safe_send(encode_string_utf8(SUCCESS_MSG))
-        logging.info("action: send_success_message | result: success")
+        # logging.info("action: send_success_message | result: success")
 
     def __send_error_message(self):
         self.__safe_send(encode_string_utf8(ERROR_MSG))
-        logging.error("action: send_error_message | result: success")
+        # logging.error("action: send_error_message | result: success")
 
     def __check_exit(self, msg):
         if msg.decode('utf-8') == EXIT:
@@ -155,7 +155,7 @@ class ClientHandler:
 
     def __log_ip(self):
         addr = self.client_socket.getpeername()
-        logging.info(f"action: log_ip | result: success | ip: {addr[0]}")
+        #logging.info(f"action: log_ip | result: success | ip: {addr[0]}")
 
 
     def stop(self):

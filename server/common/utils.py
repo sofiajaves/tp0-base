@@ -44,10 +44,10 @@ def process_bets(msg: str):
         if bets:
             store_bets(bets)
     except Exception as e:
-        logging.error(f"action: apuesta_recibida >>>> | result: fail | bets: {bets}")
-        logging.error(f"action: apuesta_recibida | result: fail | error: {e}")
+        #logging.error(f"action: apuesta_recibida >>>> | result: fail | bets: {bets}")
+        logging.error(f"action: apuestas_recibidas | result: fail | error: {e}")
         return
-    logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
+    logging.info(f"action: apuestas_recibidas | result: success | cantidad: {len(bets)}")
 
 def get_winner_bets_by_agency(bets: list[Bet], agency: str) -> list[Bet]:
     return list(filter(lambda bet: has_won(bet) and bet.agency == int(agency), bets))
