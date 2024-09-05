@@ -18,7 +18,7 @@ Los targets disponibles son:
 * **build**: Compila la aplicación cliente para ejecución en el _host_ en lugar de en docker. La compilación de esta forma es mucho más rápida pero requiere tener el entorno de Golang instalado en la máquina _host_.
 
 ### Servidor
-Para este ejercicio (ej6) se pide que se reciba mas de 1 sola apuesta por agencia (cliente). Se pide que el servidor sea un emulador de la Loteria Nacional recibiendo asi distintas apuestas de diferentes clientes y almacenarlas. Para luego realizar un sorteo entre estas.
+Para este ejercicio (ej7) se pide que ademas de recibir varias apuestas de distintos clientes a su vez que luego de recibir todas, el servidor realice un sorteo y notifique los ganadores de cada agencia a sus respectivos clientes (agencias de apuestas).
 
 Funcionamiento:
 
