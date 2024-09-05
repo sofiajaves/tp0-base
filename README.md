@@ -43,7 +43,7 @@ Funcionamiento:
 7. Retorna al paso 3 hasta llegar al final del archivo (no hay mas apuestas para enviar)
 8. Finaliza su ejecucion
 
-![flujo programa]()
+![flujo programa](https://github.com/sofiajaves/tp0-base/blob/ej6/img/flujo%20del%20programa.png)
 
 ### Protocolo Implementado
 
