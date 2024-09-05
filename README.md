@@ -111,7 +111,7 @@ En esta oportunidad se utilizo la libreria de `multiprocessing` para la concurre
 
 Cuando la cantidad de clientes finalizados deja de ser menor a la cantidad de clientes el servidor podra enviar los ganadores del sorteo. Ya que los clientes estaran conectandose hasta poder recibir respuesta a este mensaje. Una vez hecho esto se termina la ejecucion de los procesos hijos con `join()` que asegura que todos los procesos finalicen y se completen.
 
-![sincronizacion]()
+![sincronizacion](https://github.com/sofiajaves/tp0-base/blob/ej8/imgs/sincronizacion.png)
 
 ## Parte 1: Introducción a Docker
 En esta primera parte del trabajo práctico se plantean una serie de ejercicios que sirven para introducir las herramientas básicas de Docker que se utilizarán a lo largo de la materia. El entendimiento de las mismas será crucial para el desarrollo de los próximos TPs.
