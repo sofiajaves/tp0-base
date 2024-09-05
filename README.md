@@ -18,50 +18,100 @@ Los targets disponibles son:
 * **build**: Compila la aplicación cliente para ejecución en el _host_ en lugar de en docker. La compilación de esta forma es mucho más rápida pero requiere tener el entorno de Golang instalado en la máquina _host_.
 
 ### Servidor
-El servidor del presente ejemplo es un EchoServer: los mensajes recibidos por el cliente son devueltos inmediatamente. El servidor actual funciona de la siguiente forma:
-1. Servidor acepta una nueva conexión.
-2. Servidor recibe mensaje del cliente y procede a responder el mismo.
-3. Servidor desconecta al cliente.
-4. Servidor procede a recibir una conexión nuevamente.
+Para este ejercicio (ej8) se pide que ademas de recibir varias apuestas de distintos clientes a su vez que luego de recibir todas, el servidor realice un sorteo y notifique los ganadores de cada agencia a sus respectivos clientes (agencias de apuestas). Pero que esto se haga de forma concurrente.
+
+Funcionamiento:
+
+1. El servidor acepta nueva conexion
+2. El servidor recibe un mensaje del cliente. Contendra la longitud del batch o chunk de apuestas que se estaran enviando y este procedera a responder con un 'suc' (success) si fue recibido correctamente.
+3. El servidor recibe otro mensaje del cliente (efectivamente contendra el chunk de apuestas de la longitud coinicidente del mensaje que recibio anteriormente por parte del cliente).
+4. El servidor almacena en el archivo de bets.csv la apuesta y responde nuevamente con 'suc'
+5. El servidor desconecta al cliente
+6. El servidor procede a recibir una conexion nuevamente del cliente
 
 ### Cliente
-El cliente del presente ejemplo se conecta reiteradas veces al servidor y envía mensajes de la siguiente forma.
-1. Cliente se conecta al servidor.
-2. Cliente genera mensaje incremental.
-recibe mensaje del cliente y procede a responder el mismo.
-3. Cliente envía mensaje al servidor y espera mensaje de respuesta.
-Servidor desconecta al cliente.
-4. Cliente verifica si aún debe enviar un mensaje y si es así, vuelve al paso 2.
+El cliente en este caso resperesenta una agencia de apuestas (BetAgency) que en efecto enviara apuestas al servidor para que las almacene.
+
+Funcionamiento:
+
+1. El cliente se conecta al servidor
+2. El cliente lee el archivo de apuestas. Leera una cantidad de bytes que se establece en la configuracion con la variable de `maxAmount`.
+3. El cliente envia la longitud del chunk a enviar
+4. Recibe la confirmacion del servidor
+5. El cliente procede a enviar el chunk de apuestas
+6. Recibe la confirmacion nuevamente del servidor
+7. Retorna al paso 3 hasta llegar al final del archivo (no hay mas apuestas para enviar)
+8. Finaliza su ejecucion
+9. El cliente crea una nueva conexion pidiendo al servidor los ganadores de la apuesta, si no esta disponible, cierra la conezion y espera a enviar de vuelta. Si esta disponible recibe los DNIs correspondiente a los ganadores e imprime la cantidad de ganadores.
+
+![flujo programa](https://github.com/sofiajaves/tp0-base/blob/ej8/imgs/flujo%20del%20programa.png)
+
+### Protocolo Implementado
+
+El mensaje que se envia del cliente al servidor se conforma por la informacion de una apuesta:
+`{agencia}{nombre}{apellido}{documento}{fecha de nacimiento}{numero de apuesta}`
+
+En donde cada uno:
+* `Agencia`: Es un numero entero de cualquier tamaño
+* `Nombre`: Una cadena de tamaño variable
+* `Documento`: Es un numero de 8 digitos
+* `Fecha de nacimiento`: Una cadena que indica la fecha en el siguiente formato: 'YYYY-MM-DD'
+* `Numero de apuesta`: Es un numero de 4 digitos que representa el numero a apostar
+
+  Flujo del programa:
+  Para este caso se probo con 1 sola apuesta y los datos fueron insertados en el `docker-compose` en los clientes:
+```
+- CLI_NOMBRE=Santiago Lionel
+- CLI_APELLIDO=Lorca
+- CLI_DOCUMENTO=30904465
+- CLI_NACIMIENTO=1999-03-17
+- CLI_NUMERO=2201
+```
+### Manejo de chunks
+
+Para que se pueda enviar mas de una apuesta en un mismo mensaje se utilizo el caracter `;` para distinguir diferentes apuestas en el mismo mensaje.
+
+El tamaño del chunk se configura con la variable de entorno `maxAmount`. La cantidad de apuestas que se manda es variable, dependera de la longitud de los campos que componen a cada apuesta.
 
 Al ejecutar el comando `make docker-compose-up` para comenzar la ejecución del ejemplo y luego el comando `make docker-compose-logs`, se observan los siguientes logs:
 
 ```
-client1  | 2024-08-21 22:11:15 INFO     action: config | result: success | client_id: 1 | server_address: server:12345 | loop_amount: 5 | loop_period: 5s | log_level: DEBUG
-client1  | 2024-08-21 22:11:15 INFO     action: receive_message | result: success | client_id: 1 | msg: [CLIENT 1] Message N°1
-server   | 2024-08-21 22:11:14 DEBUG    action: config | result: success | port: 12345 | listen_backlog: 5 | logging_level: DEBUG
-server   | 2024-08-21 22:11:14 INFO     action: accept_connections | result: in_progress
-server   | 2024-08-21 22:11:15 INFO     action: accept_connections | result: success | ip: 172.25.125.3
-server   | 2024-08-21 22:11:15 INFO     action: receive_message | result: success | ip: 172.25.125.3 | msg: [CLIENT 1] Message N°1
-server   | 2024-08-21 22:11:15 INFO     action: accept_connections | result: in_progress
-server   | 2024-08-21 22:11:20 INFO     action: accept_connections | result: success | ip: 172.25.125.3
-server   | 2024-08-21 22:11:20 INFO     action: receive_message | result: success | ip: 172.25.125.3 | msg: [CLIENT 1] Message N°2
-server   | 2024-08-21 22:11:20 INFO     action: accept_connections | result: in_progress
-client1  | 2024-08-21 22:11:20 INFO     action: receive_message | result: success | client_id: 1 | msg: [CLIENT 1] Message N°2
-server   | 2024-08-21 22:11:25 INFO     action: accept_connections | result: success | ip: 172.25.125.3
-server   | 2024-08-21 22:11:25 INFO     action: receive_message | result: success | ip: 172.25.125.3 | msg: [CLIENT 1] Message N°3
-client1  | 2024-08-21 22:11:25 INFO     action: receive_message | result: success | client_id: 1 | msg: [CLIENT 1] Message N°3
-server   | 2024-08-21 22:11:25 INFO     action: accept_connections | result: in_progress
-server   | 2024-08-21 22:11:30 INFO     action: accept_connections | result: success | ip: 172.25.125.3
-server   | 2024-08-21 22:11:30 INFO     action: receive_message | result: success | ip: 172.25.125.3 | msg: [CLIENT 1] Message N°4
-server   | 2024-08-21 22:11:30 INFO     action: accept_connections | result: in_progress
-client1  | 2024-08-21 22:11:30 INFO     action: receive_message | result: success | client_id: 1 | msg: [CLIENT 1] Message N°4
-server   | 2024-08-21 22:11:35 INFO     action: accept_connections | result: success | ip: 172.25.125.3
-server   | 2024-08-21 22:11:35 INFO     action: receive_message | result: success | ip: 172.25.125.3 | msg: [CLIENT 1] Message N°5
-client1  | 2024-08-21 22:11:35 INFO     action: receive_message | result: success | client_id: 1 | msg: [CLIENT 1] Message N°5
-server   | 2024-08-21 22:11:35 INFO     action: accept_connections | result: in_progress
-client1  | 2024-08-21 22:11:40 INFO     action: loop_finished | result: success | client_id: 1
-client1 exited with code 0
+client1  | 2024-09-05 01:28:55 INFO     action: config | result: success | client_id: 1 | server_address: server:12345 | loop_amount: 5 | loop_period: 5s | log_level: DEBUG | batch_maxAmount: 8092
+client1  | 2024-09-05 01:28:55 INFO     action: read_bets | result: success | client_id: 1 | message: EOF
+client1  | 2024-09-05 01:28:56 INFO     action: shutdown | result: success | client_id: 1 | message: connection closed
+client1  | 2024-09-05 01:28:56 INFO     action: shutdown | result: success | client_id: 1 | message: client finished
+client1  | 2024-09-05 01:28:56 INFO     action: apuestas_enviadas | result: success | client_id: 1
+client1  | 2024-09-05 01:28:56 INFO     action: shutdown | result: success | client_id: 1 | message: connection closed
+client1  | 2024-09-05 01:28:56 INFO     action: shutdown | result: success | client_id: 1 | message: client finished
+client1  | 2024-09-05 01:28:59 INFO     action: consulta_ganadores | result: success | cant_ganadores: 2
+client1  | 2024-09-05 01:28:59 INFO     action: shutdown | result: success | client_id: 1 | message: connection closed
+client1  | 2024-09-05 01:28:59 INFO     action: shutdown | result: success | client_id: 1 | message: client finished
+client1  | 2024-09-05 01:28:59 INFO     action: client_finished | result: success | client_id: 1
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: apuestas_recibidas | result: success | cantidad: 173
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: apuestas_recibidas | result: success | cantidad: 182
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: apuestas_recibidas | result: success | cantidad: 27
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: check_exit | result: success
+2024-09-04 22:33:56 2024-09-05 01:33:56 ERROR    action: send_error_message | result: success
+2024-09-04 22:33:56 2024-09-05 01:33:56 ERROR    action: receive_message | result: fail | error: Client exited
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: close_client_connection | result: in_progress
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: close client connection | result: success
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: accept_connections | result: in_progress
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: accept_connections | result: success | ip: 172.25.125.3
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: sorteo | result: success
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: check_exit | result: success
+2024-09-04 22:33:56 2024-09-05 01:33:56 ERROR    action: send_error_message | result: success
+2024-09-04 22:33:56 2024-09-05 01:33:56 ERROR    action: receive_message | result: fail | error: Client exited
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: close_client_connection | result: in_progress
+2024-09-04 22:33:56 2024-09-05 01:33:56 INFO     action: close client connection | result: success
+
 ```
+### Sincronizacion
+
+En esta oportunidad se utilizo la libreria de `multiprocessing` para la concurrencia. En vez de crear hilos, el servidor creara un proceso por cada cliente (o conexion) que reciba y a su vez mientras hace manejo de sus conexiones podra seguir recibiendo nuevas. Se utilizo tambien un `Lock` para el acceso a una seccion critica, en este caso la escritura del archivo de apuestas. Se utiliza a su vez un `Value` para llevar un registro de los clientes que han sido "finalizados" o que han terminado de enviar sus apuestas al servidor. Esto es muy util ya que cuando un cliente finaliza se aumenta en 1 esta variable (lo que permite el `Value` es que cada proceso hijo puede modificarla y por eso necesitamos un lock antes de accederla).
+
+Cuando la cantidad de clientes finalizados deja de ser menor a la cantidad de clientes el servidor podra enviar los ganadores del sorteo. Ya que los clientes estaran conectandose hasta poder recibir respuesta a este mensaje. Una vez hecho esto se termina la ejecucion de los procesos hijos con `join()` que asegura que todos los procesos finalicen y se completen.
+
+![sincronizacion]()
 
 ## Parte 1: Introducción a Docker
 En esta primera parte del trabajo práctico se plantean una serie de ejercicios que sirven para introducir las herramientas básicas de Docker que se utilizarán a lo largo de la materia. El entendimiento de las mismas será crucial para el desarrollo de los próximos TPs.
