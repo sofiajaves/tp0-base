@@ -51,7 +51,7 @@ class Server:
     def __receive_message_length(self):
         try: 
             msg_len = int.from_bytes(self.__safe_receive(MAX_MSG_SIZE).rstrip(), "little")
-            logging.info(f"action: receive_message_length | result: success | msg_len: {msg_len}")
+            #logging.info(f"action: receive_message_length | result: success | msg_len: {msg_len}")
             self.__send_success_message()
             return msg_len
         except socket.error as e:
@@ -146,7 +146,7 @@ class Server:
 
     def __send_success_message(self):
         self.__safe_send(encode_string_utf8(SUCCESS_MSG))
-        logging.info("action: send_success_message | result: success")
+        #logging.info("action: send_success_message | result: success")
 
     def __send_error_message(self):
         self.__safe_send(encode_string_utf8(ERROR_MSG))
@@ -215,7 +215,7 @@ class Server:
 
     def __log_ip(self):
         addr = self.client_socket.getpeername()
-        logging.info(f"action: log_ip | result: success | ip: {addr[0]}")
+        #logging.info(f"action: log_ip | result: success | ip: {addr[0]}")
 
     def __check_exit(self, msg):
         if msg.decode('utf-8') == EXIT:

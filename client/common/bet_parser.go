@@ -16,7 +16,6 @@ func readBets(file *os.File, id string, chunk_size int) ([]*Bet, error){
 
 	n, err := file.Read(buffer)
 	if n == 0 {
-		log.Infof("action: read_bets EOF | result: MEH | client_id: %v | message: EOF", id)
 		return nil, io.EOF
 	}
 	if err != nil {

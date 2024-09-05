@@ -134,7 +134,7 @@ func (c *Client) ReceiveConfirmation() error {
 	conf, err := c.SafeRecv(CONFIRM_MSG_LEN)
 	response := string(conf)
 	if response == SUCCESS_MSG {
-		log.Infof("action: receive_confirmation | result: success | client_id: %v", c.config.ID)
+		//log.Infof("action: receive_confirmation | result: success | client_id: %v", c.config.ID)
 	} else if response == ERROR_MSG {
 		log.Errorf("action: receive_confirmation | result: fail | client_id: %v", c.config.ID)
 	}
