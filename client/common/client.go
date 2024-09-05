@@ -132,7 +132,7 @@ func (c *Client) ReceiveConfirmation() error {
 		return err
 	}
 
-	log.Infof("action: receive_confirmation | result: success | client_id: %v | confirmation: %v", c.config.ID, conf)
+	//log.Infof("action: receive_confirmation | result: success | client_id: %v | confirmation: %v", c.config.ID, conf)
 	return err
 }
 

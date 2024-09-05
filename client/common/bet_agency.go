@@ -21,6 +21,12 @@ func NewBetAgency(client_config ClientConfig) *BetAgency {
 }
 
 func (agency *BetAgency) Start() {
+	//wd, err := os.Getwd()
+	/*if err != nil {
+		log.Errorf("action: start bet agency | result: fail | client_id: %v | error: %v", agency.client.config.ID, err)
+		return
+	}*/
+	//log.Printf("current working directory: %v", wd)
 	file, err := os.Open(fmt.Sprintf("/dataset/agency-%s.csv", agency.client.config.ID))
 	if err != nil {
 		log.Errorf("action: start bet agency | result: fail | client_id: %v | error: %v", agency.client.config.ID, err)
@@ -41,7 +47,7 @@ func (agency *BetAgency) Start() {
 		bets, err := readBets(file, agency.client.config.ID, agency.client.config.MaxAmount)
 		if err != nil {
 			if err == io.EOF {
-				log.Infof("action: read_bets | result: success | client_id: %v | message: EOF", agency.client.config.ID)
+				log.Infof("action: read_bets | result: success | client_id: %v", agency.client.config.ID)
 				break
 			} else {
 				log.Errorf("action: read_bets | result: fail | client_id: %v | error: %v", agency.client.config.ID, err)

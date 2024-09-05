@@ -44,7 +44,7 @@ class Server:
     def __receive_message_length(self):
         try: 
             msg_len = int.from_bytes(self.__safe_receive(MAX_MSG_SIZE).rstrip(), "little")
-            logging.info(f"action: receive_message_length | result: success | msg_len: {msg_len}")
+            #logging.info(f"action: receive_message_length | result: success | msg_len: {msg_len}")
             self.__send_success_message()
             return msg_len
         except socket.error as e:
@@ -81,8 +81,10 @@ class Server:
 
                 self.__send_success_message()
         except OSError as e:
+            if self.client_socket is None:
+                logging.error("action: handle_client_connection | result: fail | error: client disconnected")
             self.__send_error_message()
-            logging.error(f"action: receive_message | result: fail | error: {e}")
+            #logging.error(f"action: receive_message | result: fail | error: {e}")
         finally:
             self.__close_client_connection()
         
@@ -93,9 +95,11 @@ class Server:
             try:
                     self.client_socket.shutdown(socket.SHUT_RDWR)
             except OSError as e:
-                    if self.client_socket is None:
-                        logging.error(f'action: close_client_connection | result: fail | error: client disconnected')
-                    logging.error(f'action: close_client_connection | result: fail | error: {e}')
+                if e.errno == 107:
+                    logging.info(f'action: close_client_connection | result: ok | client disconnected')
+                elif self.client_socket is None:
+                    logging.error(f'action: close_client_connection | result: fail | error: client disconnected')
+                    #logging.error(f'action: close_client_connection | result: fail | error: {e}')
             finally:
                 self.client_socket.close()
                 self.client_socket = None
@@ -131,7 +135,7 @@ class Server:
 
     def __send_success_message(self):
         self.__safe_send("success")
-        logging.info("action: send_success_message | result: success")
+        #logging.info("action: send_success_message | result: success")
 
     def __send_error_message(self):
         self.__safe_send("error")
@@ -146,7 +150,7 @@ class Server:
                 n = self.client_socket.send(bytes_to_send[total_sent:])
                 total_sent += n
             except socket.error as e:
-                logging.error(f"action: safe_send | result: fail | error: {e}")
+                logging.error(f"action: safe_send | result: fail | detail: client disconnected")
                 break
             return
 
@@ -170,7 +174,7 @@ class Server:
     
     def __log_ip(self):
         addr = self.client_socket.getpeername()
-        logging.info(f"action: log_ip | result: success | ip: {addr[0]}")
+        #logging.info(f"action: log_ip | result: success | ip: {addr[0]}")
 
     def __check_exit(self, msg):
         if msg.decode('utf-8') == EXIT:

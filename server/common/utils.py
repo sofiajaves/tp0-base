@@ -44,6 +44,6 @@ def process_message(msg: bytes):
         bets = Bet.deserialize_multiple_bets(msg.decode('utf-8'))
         store_bets(bets)
     except Exception as e:
-        logging.error(f"action: apuesta_recibida | result: fail | error: {e}")
+        logging.error(f"action: apuestas_recibidas | result: fail | error: {e}")
         return
-    logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
+    logging.info(f"action: apuestas_recibidas | result: success | cantidad: {len(bets)}")
